@@ -10,9 +10,14 @@ class Validator {
 	public datas(req: Request, res: Response, next: NextFunction) {
 		const route = req.path;
 		const method = req.method;
-		const paramsRoute = req.path.split('/')[1];
+
+		if (method !== 'POST' && method !== 'PUT') {
+			return next();
+		}
+
 		const params = req.path.split('/')[2];
-		const schema = params ? Schemas[`/${paramsRoute}/{id}`][method] : Schemas[route][method];
+		const paramsRoute = req.path.split('/')[1];
+		const schema = params ? Schemas[`/${paramsRoute}/{id}`]?.[method] : Schemas[route][method];
 
 		if (!schema) {
 			return next();
@@ -24,7 +29,7 @@ class Validator {
 			return Handler.exception(res, error.details[0].message, 422, null);
 		}
 
-		next();
+		return next();
 	}
 }
 

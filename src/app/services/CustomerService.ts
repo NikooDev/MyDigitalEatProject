@@ -27,7 +27,7 @@ class CustomerService extends DaoService<CustomerType> {
 				updated_at: new Date(),
 			},
 			address: entity.address,
-			user_id: undefined
+			user_id: null
 		});
 
 		await newCustomer.hashPassword(entity.password);

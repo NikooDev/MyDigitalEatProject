@@ -23,7 +23,7 @@ class CustomerController implements Controller {
 		});
 	}
 
-	public read(req: Request, res: Response) {
+	public async read(req: Request, res: Response) {
 
 	}
 

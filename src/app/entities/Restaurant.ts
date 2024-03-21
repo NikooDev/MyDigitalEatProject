@@ -18,6 +18,7 @@ class Restaurant extends User implements RestaurantType {
 		this.id = restaurant.id;
 		this.user_id = restaurant.user_id;
 		this.card_id = restaurant.card_id;
+		this.address = restaurant.address;
 		this.description = restaurant.description;
 	}
 }

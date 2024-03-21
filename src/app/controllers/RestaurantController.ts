@@ -1,21 +1,51 @@
 import { Request, Response } from 'express';
 import Controller from '@Src/interfaces/Controller';
+import { restaurantController } from '@Core/constants/errors';
+import RestaurantService from '@Services/RestaurantService';
+import UserService from '@Services/UserService';
+import Handler from '@Core/response/handler';
+import Inject from '@Core/service/Inject';
 
-class RestaurantController {
-	public create(req: Request, res: Response) {
+class RestaurantController implements Controller {
+	@Inject('RestaurantService')
+	private restaurantService: RestaurantService;
+
+	@Inject('UserService')
+	private userService: UserService;
+
+	public async create(req: Request, res: Response) {
+		const data = req.body;
+
+		await Handler.tryCatch(res, restaurantController.create, async () => {
+			const restaurant = await this.restaurantService.create(data);
+
+			return (Handler[restaurant.code === 200 ? 'success' : 'exception'])(res, restaurant.message, restaurant.code, { restaurant: restaurant.data });
+		});
+	}
+
+	public async read(req: Request, res: Response) {
 
 	}
 
-	public delete(req: Request, res: Response) {
+	public async update(req: Request, res: Response) {
+		const data = req.body;
+		const params = req.params;
 
+		await Handler.tryCatch(res, restaurantController.update, async () => {
+			const deliveryman = await this.restaurantService.update(data, params.id);
+
+			return (Handler[deliveryman.code === 200 ? 'success' : 'exception'])(res, deliveryman.message, deliveryman.code, { deliveryman: deliveryman.data });
+		});
 	}
 
-	public read(req: Request, res: Response) {
+	public async delete(req: Request, res: Response) {
+		const params = req.params;
 
-	}
+		await Handler.tryCatch(res, restaurantController.delete, async () => {
+			const restaurant = await this.userService.delete(params.id);
 
-	public update(req: Request, res: Response) {
-
+			return (Handler[restaurant.code === 200 ? 'success' : 'exception'])(res, restaurant.message, restaurant.code);
+		});
 	}
 }
 
