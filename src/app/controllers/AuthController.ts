@@ -14,13 +14,13 @@ class AuthController {
 		await Handler.tryCatch(res, authController.login, async () => {
 			const auth = await this.userService.login(data.email, data.password);
 
-			if (!auth.success) {
-				return Handler.exception(res, auth.code, auth.error);
+			if (!auth.token) {
+				return Handler.exception(res, null, auth.code, auth.error);
 			}
 
 			req.user = auth.user;
 
-			return Handler.success(res, 'Vous êtes bien connecté', { user: auth.user, token: auth.token });
+			return Handler.success(res, 'Vous êtes bien connecté', 200, { user: auth.user, token: auth.token });
 		});
 	}
 }

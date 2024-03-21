@@ -3,7 +3,7 @@ import Schemas from '@Validators/Schemas';
 import Handler from '@Core/response/handler';
 
 /**
- * @class Validator
+ * @Class Validator
  * @description Validation générique des données de toutes les routes
  */
 class Validator {
@@ -21,7 +21,7 @@ class Validator {
 		const { error } = schema.validate(req.body);
 
 		if (error) {
-			return Handler.exception(res, 422, error.details[0].message);
+			return Handler.exception(res, error.details[0].message, 422, null);
 		}
 
 		next();

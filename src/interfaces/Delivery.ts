@@ -5,6 +5,7 @@ export enum DeliveryEnum {
 }
 
 interface DeliveryType {
+	id?: number
 	customer_id: number
 	deliveryman_id: number
 	restaurant_id: number

@@ -13,5 +13,16 @@ export const customerController = {
 	update: {
 		name: 'CustomerController.update() =>',
 		error: 'Une erreur est survenue lors de la modification de votre compte'
+	},
+	delete: {
+		name: 'CustomerController.delete() =>',
+		error: 'Une erreur est survenue lors de la suppression de votre compte'
+	}
+}
+
+export const middleware = {
+	email: {
+		name: 'Email.isUniqueEmail() =>',
+		error: 'Une erreur interne est survenue'
 	}
 }

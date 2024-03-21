@@ -1,5 +1,6 @@
 import Builder from '@Src/database/mysql/Builder';
 import { WhereOperatorType } from '@Src/interfaces/Manager';
+import ResponseType from '@Src/interfaces/Response';
 
 /**
  * @class MysqlManager
@@ -26,7 +27,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 	 * this.service.create({...});
 	 * @param entity
 	 */
-	public async create(entity: Partial<T>): Promise<void | T> {
+	public async create(entity: Partial<T>): Promise<void | ResponseType<T>> {
 		const columns = Object.keys(entity);
 		const values = Object.values(entity);
 
@@ -46,7 +47,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 	 * @param entity
 	 * @param id
 	 */
-	public async update(entity: Partial<T>, id: number): Promise<void | T> {
+	public async update(entity: Partial<T>, id: string | number): Promise<void | ResponseType<T>> {
 		const setColumns = Object.keys(entity)
 			.filter(column => entity[column as keyof T] !== undefined && entity[column as keyof T] !== null)
 			.map(column => `${column} = ?`)
@@ -67,7 +68,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 	 * this.service.delete(id);
 	 * @param id
 	 */
-	public async delete(id: string): Promise<void> {
+	public async delete(id: string): Promise<ResponseType<void | T>> {
 		this.query = `DELETE FROM ${this.tableName} WHERE id = ?`;
 		this.params = [id];
 
@@ -76,22 +77,20 @@ abstract class MysqlManager<T> extends Builder<T> {
 
 	/**
 	 * @method select
-	 * @description Pour faire un select sur la table liée au service =>
+	 * @description Select sur la table liée au service =>
 	 * Pour la table "users" : this.userService.select('id', 'name').run();
 	 * Les champs passés en paramètres doivent correspondrent à ceux de la table du service
-	 * @param fields
+	 * @param useFunction Si true, les champs passés en paramètres ne sont pas préfixés par le nom de la table
+	 * @param fields Noms des colonnes à sélectionner
 	 */
-	public select(...fields: string[]) {
+	public select(useFunction: boolean, ...fields: string[]) {
 		if (fields.length === 0) {
 			throw new Error('select() : Vous devez ajouter au moins une colonne');
 		}
 
-		const columns = fields.map(field => `${this.tableName}.${field}`).join(', ');
+		const columns = fields.map(field => useFunction ? `${field}` : `${this.tableName}.${field}`).join(', ');
 
-		if (this.queryJoin) {
-			this.groupByColumns = [columns];
-		}
-
+		this.groupByColumns = [columns];
 		this.queryStart = `SELECT ${columns}`;
 		return {
 			where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
@@ -107,12 +106,19 @@ abstract class MysqlManager<T> extends Builder<T> {
 			 * 		.select('id', autres colonnes de la table users)
 			 * 		.selectJoin('customers', 'user_id').run();
 			 * @param table
+			 * @param aggregate
 			 * @param fields
 			 */
-			selectJoin: (table: string, ...fields: string[]) => {
+			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => {
 				const joinedColumns = fields.flatMap(column => [`'${String(column)}'`, `${table}.${String(column)}`]).join(', ');
 
-				this.queryStart += `, JSON_ARRAYAGG(JSON_OBJECT(${joinedColumns})) AS ${table.slice(0, -1)}`;
+				if (aggregate) {
+					this.queryStart += `, JSON_ARRAYAGG(JSON_OBJECT(${joinedColumns})) AS ${table.slice(0, -1)}`;
+				} else {
+					this.queryStart += `, JSON_OBJECT(${joinedColumns}) AS ${table.slice(0, -1)}`;
+				}
+
+				this.conditionsEnable.group = true;
 				this.queryJoin = true;
 
 				return {
@@ -121,7 +127,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 					 * @description Permet de faire une jointure =>
 					 * this.userService
 					 * 		.select('id', autres colonnes de la table users)
-					 * 		.selectJoin('customers', 'users.id', 'customers.user_id').run();
+					 * 		.selectJoin('customers', 'users.id', 'customers.user_id')
 					 * 		.join('LEFT JOIN', 'orders', 'users.id', 'orders.user_id').run();
 					 * @param join
 					 * @param table

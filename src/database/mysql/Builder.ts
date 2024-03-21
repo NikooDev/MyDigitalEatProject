@@ -54,16 +54,16 @@ abstract class Builder<T> extends MysqlDb {
 	 * @property conditions
 	 * @description Conditions de la requête SQL
 	 */
-	protected  conditions: { where: string, and: string, or: string, order: string, limit: string } = {
-		where: '', and: '', or: '', order: '', limit: ''
+	protected conditions: { where: string, andOr: string, order: string, limit: string } = {
+		where: '', andOr: '', order: '', limit: ''
 	};
 
 	/**
 	 * @property conditionsEnable
 	 * @description Conditions activées de la requête SQL
 	 */
-	protected conditionsEnable: { where: boolean, and: boolean, or: boolean, order: boolean, limit: boolean } = {
-		where: false, and: false, or: false, order: false, limit: false
+	protected conditionsEnable: { where: boolean, and: boolean, or: boolean, order: boolean, limit: boolean, group: boolean } = {
+		where: false, and: false, or: false, order: false, limit: false, group: false
 	};
 
 	protected constructor() {
@@ -73,13 +73,14 @@ abstract class Builder<T> extends MysqlDb {
 	/**
 	 * @method where
 	 * @description Ajout d'une condition WHERE
+	 * .where('column', '=', value)
 	 * @param column
 	 * @param operator
 	 * @param value
 	 */
 	protected where(column: string, operator: WhereOperatorType, value: any) {
-		this.addWhereLogic(column as string, operator, value);
 		this.conditionsEnable.where = true;
+		this.addWhereLogic(column as string, operator, value);
 
 		return {
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
@@ -97,8 +98,8 @@ abstract class Builder<T> extends MysqlDb {
 	 * @param value
 	 */
 	protected andWhere(column: string, operator: WhereOperatorType, value: any) {
-		this.addWhereLogic(column as string, operator, value, 'AND');
 		this.conditionsEnable.and = true;
+		this.addWhereLogic(column as string, operator, value, 'AND');
 
 		return {
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
@@ -116,8 +117,8 @@ abstract class Builder<T> extends MysqlDb {
 	 * @param value
 	 */
 	protected orWhere(column: string, operator: WhereOperatorType, value: any) {
-		this.addWhereLogic(column as string, operator, value, 'OR');
 		this.conditionsEnable.or = true;
+		this.addWhereLogic(column as string, operator, value, 'OR');
 
 		return {
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
@@ -164,20 +165,28 @@ abstract class Builder<T> extends MysqlDb {
 	protected async run(): Promise<T[] & T> {
 		if (this.queryJoin) {
 			const query = `${this.queryStart} ${this.queryFrom} ${this.queryEnd}`;
-			const queryCondition = this.conditionsEnable.where ? this.conditions.where : '';
-			const queryGroupBy = `GROUP BY ${this.groupByColumns.join(', ')}`;
+			const queryWhere = this.conditionsEnable.where ? this.conditions.where : '';
+			const queryAndOrWhere = (this.conditionsEnable.and || this.conditionsEnable.or) ? this.conditions.andOr : '';
+			const queryGroupBy = this.conditionsEnable.group ? `GROUP BY ${this.groupByColumns.join(', ')}` : '';
 
-			this.query = `${query} ${queryCondition} ${queryGroupBy}`;
+			this.query = `${query} ${queryWhere} ${queryAndOrWhere} ${queryGroupBy}`;
 		} else {
 			const query = `${this.queryStart} ${this.queryFrom}`;
-			const queryCondition = this.conditionsEnable.where ? this.conditions.where : '';
+			const queryWhere = this.conditionsEnable.where ? this.conditions.where : '';
+			const queryAndOrWhere = (this.conditionsEnable.and || this.conditionsEnable.or) ? this.conditions.andOr : '';
 			const queryOrderBy = this.conditionsEnable.order ? this.conditions.order : '';
 			const queryLimit = this.conditionsEnable.limit ? this.conditions.limit : '';
 
-			this.query = `${query} ${queryCondition} ${queryOrderBy} ${queryLimit}`;
+			this.query = `${query} ${queryWhere} ${queryAndOrWhere} ${queryOrderBy} ${queryLimit}`;
 		}
 
 		const query = this.query.replace(/\s{2,}/g, ' ');
+
+		this.query = '';
+		this.queryStart = 'SELECT ';
+		this.queryEnd = '';
+		this.conditions = { where: '', limit: '', order: '', andOr: '' };
+		this.conditionsEnable = { where: false, limit: false, order: false, and: false, or: false, group: false };
 
 		return await super.execute(query, this.params);
 	}
@@ -192,22 +201,15 @@ abstract class Builder<T> extends MysqlDb {
 	 * @private
 	 */
 	private addWhereLogic(column: string, operator: WhereOperatorType, value: string | number, logic?: 'AND' | 'OR'): void {
-		let whereClause: string;
-
-		if (logic) {
-			whereClause = `${logic} ${column} ${operator} ${this.escapeValue(value)}`;
-		} else {
-			if (this.conditionsEnable.where) {
-				whereClause = `${column} ${operator} ${this.escapeValue(value)} AND `;
-			} else {
-				whereClause = `${column} ${operator} ${this.escapeValue(value)} `;
-			}
-		}
-
 		this.query += `${this.queryStart} ${this.queryFrom}`;
 
-		this.conditions.where += (this.conditionsEnable.where ? `${whereClause} ` : `WHERE ${whereClause} `);
-
+		if (this.conditionsEnable.where) {
+			if (this.conditionsEnable.and || this.conditionsEnable.or) {
+				this.conditions.where += ` ${logic} ${column} ${operator} ${this.escapeValue(value)}`;
+			} else {
+				this.conditions.where = `WHERE ${column} ${operator} ${this.escapeValue(value)}`;
+			}
+		}
 	}
 
 	/**

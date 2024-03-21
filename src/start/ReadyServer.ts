@@ -8,6 +8,10 @@ import {
 	AuthController, CustomerController, DeliverymanController, RestaurantController,
 	DeliveryController, MenuController, DisheController
 } from '@App/controllers';
+import {
+	MiddlewaresCustomer, MiddlewaresDeliveries, MiddlewaresDeliveryman,
+	MiddlewaresDishe, MiddlewaresMenu, MiddlewaresRestaurant
+} from '@Middlewares/handler';
 import Validator from '@Middlewares/Validator';
 
 class ReadyServer {
@@ -84,12 +88,12 @@ class ReadyServer {
 	private router(): void {
 		this.route.post('/login', [], AuthController.login.bind(AuthController));
 
-		this.crud('/customers', [], CustomerController);
-		this.crud('/deliverymans', [], DeliverymanController);
-		this.crud('/restaurants', [], RestaurantController);
-		this.crud('/deliveries', [], DeliveryController);
-		this.crud('/menus', [], MenuController);
-		this.crud('/dishes', [], DisheController);
+		this.crud('/customers', [MiddlewaresCustomer], CustomerController);
+		this.crud('/deliverymans', [MiddlewaresDeliveryman], DeliverymanController);
+		this.crud('/restaurants', [MiddlewaresRestaurant], RestaurantController);
+		this.crud('/deliveries', [MiddlewaresDeliveries], DeliveryController);
+		this.crud('/menus', [MiddlewaresMenu], MenuController);
+		this.crud('/dishes', [MiddlewaresDishe], DisheController);
 	}
 
 	/**

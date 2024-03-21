@@ -2,6 +2,8 @@ import User from '@Entities/User';
 import { CustomerType } from '@Src/interfaces/User';
 
 class Customer extends User implements CustomerType {
+	public id: number;
+
 	public user_id: number;
 
 	public address: string;
@@ -9,6 +11,7 @@ class Customer extends User implements CustomerType {
 	constructor(customer: CustomerType) {
 		super(customer.user);
 
+		this.id = customer.id;
 		this.user_id = customer.user_id;
 		this.address = customer.address;
 	}

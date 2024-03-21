@@ -10,8 +10,9 @@ class Handler {
 	 * @param res
 	 * @param code
 	 * @param message
+	 * @param data
 	 */
-	public static exception(res: Response, code: number, message: string) {
+	public static exception(res: Response, message: string, code: number, data?: {}) {
 		return res.status(code).json({
 			code,
 			success: false,
@@ -23,10 +24,11 @@ class Handler {
 	 * @description Réponse succès
 	 * @param res
 	 * @param message
+	 * @param code
 	 * @param datas
 	 */
-	public static success(res: Response, message?: string, datas?: {}) {
-		return res.status(200).json({
+	public static success(res: Response, message?: string, code?: number, datas?: {}) {
+		return res.status(code).json({
 			success: true,
 			message: message,
 			...datas,
@@ -40,7 +42,7 @@ class Handler {
 	 * @param context
 	 * @param callback
 	 */
-	public static async tryCatch(res: Response, context: { name: string, error: string }, callback: () => Promise<Response>) {
+	public static async tryCatch(res: Response, context: { name: string, error: string }, callback: () => Promise<Response | void>) {
 		try {
 			await callback();
 		} catch (err) {
@@ -48,7 +50,7 @@ class Handler {
 				Handler.logger(`Erreur ${context.name+' '+err}`, 'error');
 			}
 
-			return Handler.exception(res, 500, context.error);
+			return Handler.exception(res, context.error, 500, null);
 		}
 	}
 

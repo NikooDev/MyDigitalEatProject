@@ -1,6 +1,8 @@
 import DeliveryType, { DeliveryEnum } from '@Src/interfaces/Delivery';
 
 class Delivery implements DeliveryType {
+	public id: number;
+
 	public customer_id: number;
 
 	public deliveryman_id: number;
@@ -12,6 +14,7 @@ class Delivery implements DeliveryType {
 	public created_at: Date;
 
 	constructor(delivery: DeliveryType) {
+		this.id = delivery.id;
 		this.customer_id = delivery.customer_id;
 		this.deliveryman_id = delivery.deliveryman_id;
 		this.restaurant_id = delivery.restaurant_id;

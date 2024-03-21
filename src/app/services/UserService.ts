@@ -4,6 +4,7 @@ import Bcrypt from 'bcrypt';
 import Dotenv from 'dotenv';
 import DaoService from '@Services/DaoService';
 import Container from '@Core/service/Container';
+import ResponseType from '@Src/interfaces/Response';
 
 Dotenv.config();
 
@@ -14,9 +15,12 @@ class UserService extends DaoService<UserType> {
 
 	public async login(email: string, password: string) {
 		const secret: Secret | undefined = process.env.JWT_SECRET;
-		const userExist = await this.select('email', 'password').where('email', '=', email).run();
+		const userExists = await this.select(false, 'email', 'password', 'id', 'role', 'created_at')
+			.where('email', '=', email)
+			.run();
+		const user = userExists[0];
 
-		if (userExist.length === 0) {
+		if (!user) {
 			return {
 				code: 404,
 				success: false,
@@ -24,14 +28,14 @@ class UserService extends DaoService<UserType> {
 			};
 		}
 
-		const user = userExist[0];
 		const samePasswords = await Bcrypt.compare(password, user.password);
 
 		// Si les mots de passe sont identiques
 		if (samePasswords) {
 			const userToken = {
-				uid: user.id,
-				role: user.role
+				id: user.id,
+				role: user.role,
+				created_at: user.created_at
 			};
 
 			const token = Jwt.sign(userToken, secret, {
@@ -53,8 +57,6 @@ class UserService extends DaoService<UserType> {
 		}
 	}
 
-
-
 	public async create(entity: UserType) {
 		await super.create(entity);
 
@@ -64,6 +66,23 @@ class UserService extends DaoService<UserType> {
 			return lastInsertId[0].id;
 		} else {
 			throw new Error('Échec de la récupération du dernier identifiant');
+		}
+	}
+
+	public async delete(id: string): Promise<ResponseType<void | UserType>> {
+		const userExists = await this.select(false, 'id')
+			.where('id', '=', id)
+			.run();
+		const userExist = userExists[0];
+
+		if (userExist) {
+			return super.delete(id);
+		} else {
+			return {
+				code: 404,
+				data: null,
+				message: 'Cet utilisateur n\'existe pas'
+			}
 		}
 	}
 }

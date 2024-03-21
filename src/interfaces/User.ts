@@ -11,7 +11,7 @@ export enum StatusEnum {
 }
 
 export interface UserType {
-	id?: string
+	id?: number
 	email: string
 	password: string
 	name: string
@@ -22,14 +22,14 @@ export interface UserType {
 }
 
 export interface CustomerType {
-	id?: string
+	id?: number
 	user_id: number
 	address: string
 	user: UserType
 }
 
 export interface DeliverymanType {
-	id?: string
+	id?: number
 	user_id: number
 	status: StatusEnum
 	address: string
@@ -37,7 +37,7 @@ export interface DeliverymanType {
 }
 
 export interface RestaurantType {
-	id?: string
+	id?: number
 	user_id: number
 	card_id: number
 	description: string
