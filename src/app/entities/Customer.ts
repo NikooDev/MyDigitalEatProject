@@ -1,5 +1,6 @@
 import User from '@Entities/User';
 import { CustomerType } from '@Src/interfaces/User';
+import DeliveryType from '@Src/interfaces/Delivery';
 
 class Customer extends User implements CustomerType {
 	public id: number;

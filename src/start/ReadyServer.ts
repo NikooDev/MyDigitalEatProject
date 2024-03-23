@@ -12,7 +12,6 @@ import {
 	MiddlewaresCustomer, MiddlewaresDeliveries, MiddlewaresDeliveryman,
 	MiddlewaresDishe, MiddlewaresMenu, MiddlewaresRestaurant
 } from '@Middlewares/handler';
-import Validator from '@Middlewares/Validator';
 
 class ReadyServer {
 	/**
@@ -68,17 +67,17 @@ class ReadyServer {
 		// Route DOCS
 		this.app.use('/api/docs', SwaggerUI.serve, SwaggerUI.setup(SwaggerDocument));
 
-		// Validation des données selon les paths et les méthodes POST et PUT
-		this.app.use('/api/rest', Validator.datas.bind(Validator));
-
 		// Routes REST
 		this.app.use('/api/rest', this.route);
 
 		// Routes GRAPHQL
-		this.app.use('/api/flex', graphqlHTTP({
-			schema: null,
-			graphiql: true
-		}));
+		this.app.use('/api/flex', (req, res) => {
+			graphqlHTTP({
+				schema: null,
+				graphiql: true,
+				context: { user: req.user }
+			})(req, res);
+		});
 	}
 
 	/**

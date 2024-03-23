@@ -15,7 +15,7 @@ class Container {
 		this.services.set(name, service);
 	}
 
-	public resolve<T>(name: string): T {
+	public static resolve<T>(name: string): T {
 		return Container.services.get(name);
 	}
 }

@@ -24,7 +24,7 @@ class UserService extends DaoService<UserType> {
 			return {
 				code: 404,
 				success: false,
-				error: 'Cette adresse e-mail appartient à aucun compte'
+				message: 'Cette adresse e-mail appartient à aucun compte'
 			};
 		}
 
@@ -52,7 +52,7 @@ class UserService extends DaoService<UserType> {
 			return {
 				code: 401,
 				success: false,
-				error: 'Vos identifiants sont incorrects'
+				message: 'Vos identifiants sont incorrects'
 			};
 		}
 	}
@@ -60,12 +60,12 @@ class UserService extends DaoService<UserType> {
 	public async create(entity: UserType) {
 		await super.create(entity);
 
-		const lastInsertId = await this.execute('SELECT LAST_INSERT_ID() AS id');
+		const lastInsertId = await this.select(true, 'LAST_INSERT_ID() AS id')
+			.limit(1)
+			.run();
 
-		if (lastInsertId && lastInsertId.length > 0 && typeof lastInsertId[0].id !== 'undefined') {
+		if (lastInsertId && lastInsertId.length === 1 && lastInsertId[0].id !== 0) {
 			return lastInsertId[0].id;
-		} else {
-			throw new Error('Échec de la récupération du dernier identifiant');
 		}
 	}
 
@@ -76,7 +76,13 @@ class UserService extends DaoService<UserType> {
 		const userExist = userExists[0];
 
 		if (userExist) {
-			return super.delete(id);
+			await super.delete(id);
+
+			return {
+				code: 200,
+				data: null,
+				message: 'L\'utilisateur a bien été supprimé'
+			}
 		} else {
 			return {
 				code: 404,

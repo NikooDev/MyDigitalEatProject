@@ -1,5 +1,6 @@
 import User from '@Entities/User';
 import { DeliverymanType, StatusEnum } from '@Src/interfaces/User';
+import DeliveryType from '@Src/interfaces/Delivery';
 
 class Deliveryman extends User implements DeliverymanType {
 	public id: number;

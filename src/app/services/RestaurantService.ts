@@ -6,10 +6,15 @@ import Handler from '@Core/response/handler';
 import Restaurant from '@Entities/Restaurant';
 import UserService from '@Services/UserService';
 import Inject from '@Core/service/Inject';
+import CardService from '@Services/CardService';
+import CardType from '@Src/interfaces/Card';
 
 class RestaurantService extends DaoService<RestaurantType> {
 	@Inject('UserService')
 	private userService: UserService;
+
+	@Inject('CardService')
+	private cardService: CardService;
 
 	constructor() {
 		super('restaurants');
@@ -68,16 +73,17 @@ class RestaurantService extends DaoService<RestaurantType> {
 		}
 	}
 
-	public async update(entity: Partial<RestaurantType & UserType>, id: string): Promise<ResponseType<RestaurantType>> {
-		const restaurantExists = await this.select(false, 'id', 'user_id')
+	public async update(entity: Partial<RestaurantType & UserType & { card: CardType }>, id: string): Promise<ResponseType<RestaurantType & { card: CardType }>> {
+		// Est-ce que le restaurant existe ?
+		const restaurantExists = await this.select(false, 'id', 'user_id', 'card_id', 'address', 'description')
 			.selectJoin('users', false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
-			.join('INNER JOIN', 'users', 'users.id', 'customers.user_id')
-			.where('customers.user_id', '=', id)
+			.join('INNER JOIN', 'users', 'users.id', 'restaurants.user_id')
+			.where('restaurants.user_id', '=', id)
 			.run()
 		const restaurantExist = restaurantExists[0];
 
 		if (restaurantExist) {
-			const updateRestaurant = new Restaurant({
+			let updateRestaurant = new Restaurant({
 				id: restaurantExist.id,
 				user_id: restaurantExist.user_id,
 				card_id: restaurantExist.card_id,
@@ -103,13 +109,51 @@ class RestaurantService extends DaoService<RestaurantType> {
 
 			const { user, ...restaurant } = updateRestaurant;
 
-			await super.update(restaurant, updateRestaurant.user_id);
+			// Si on modifie ou ajoute une carte, on vérifie si elle existe déjà
+			if (entity.card && entity.card.description.length > 0) {
+				const restaurantCardExists = await this.select(false, 'card_id')
+					.selectJoin('cards', false, 'id')
+					.join('INNER JOIN', 'cards', 'cards.id', 'restaurants.card_id')
+					.where('restaurants.user_id', '=', restaurantExist.user_id)
+					.run();
+				const restaurantCardExist = restaurantCardExists[0];
+
+				if (!restaurantCardExist) {
+					restaurant.card_id = await this.cardService.create(entity.card);
+
+					await super.update({ card_id: restaurant.card_id }, restaurantExist.id);
+				} else {
+
+					await this.cardService.update(entity.card, restaurantCardExist.card_id);
+				}
+			}
+
+			let card: CardType = { id: null, description: null };
+
+			// On récupère la carte du restaurant
+			const restaurantCardExists = await this.select(false, 'card_id')
+				.selectJoin('cards', false, 'id', 'description')
+				.join('INNER JOIN', 'cards', 'cards.id', 'restaurants.card_id')
+				.where('restaurants.user_id', '=', restaurantExist.user_id)
+				.run();
+			const restaurantCardExist = restaurantCardExists[0] as RestaurantType & { card: CardType };
+
+			if (restaurantCardExist) {
+				card.id = restaurantCardExist.card_id;
+				card.description = restaurantCardExist.card.description;
+			}
+
+			await super.update(restaurant, restaurantExist.id);
 
 			delete updateRestaurant.user.password;
+			delete updateRestaurant.id;
 
 			return {
 				code: 200,
-				data: updateRestaurant,
+				data: {
+					...updateRestaurant,
+					card: (card.id && card.description) ? card : null
+				},
 				message: 'Votre compte restaurant a bien été modifié'
 			};
 		} else {

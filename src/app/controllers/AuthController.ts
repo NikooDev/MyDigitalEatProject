@@ -15,7 +15,7 @@ class AuthController {
 			const auth = await this.userService.login(data.email, data.password);
 
 			if (!auth.token) {
-				return Handler.exception(res, null, auth.code, auth.error);
+				return Handler.exception(res, auth.message, auth.code);
 			}
 
 			req.user = auth.user;

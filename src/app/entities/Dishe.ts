@@ -5,6 +5,8 @@ class Dishe implements DisheType {
 
 	public card_id: number;
 
+	public restaurant_id: number;
+
 	public name: string;
 
 	public price: number;
@@ -12,6 +14,7 @@ class Dishe implements DisheType {
 	constructor(dishe: DisheType) {
 		this.id = dishe.id;
 		this.card_id = dishe.card_id;
+		this.restaurant_id = dishe.restaurant_id;
 		this.name = dishe.name;
 		this.price = dishe.price;
 	}

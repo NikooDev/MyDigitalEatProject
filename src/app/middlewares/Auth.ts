@@ -1,10 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import Jwt, { Secret } from 'jsonwebtoken';
+import MenuType from '@Src/interfaces/Menu';
+import DisheType from '@Src/interfaces/Dishe';
 import { RoleEnum, UserType } from '@Src/interfaces/User';
 import UserService from '@Services/UserService';
+import MenuService from '@Services/MenuService';
+import DisheService from '@Services/DisheService';
 import Handler from '@Core/response/handler';
-import Dotenv from 'dotenv';
 import Inject from '@Core/service/Inject';
+import Dotenv from 'dotenv';
 
 Dotenv.config();
 
@@ -16,6 +20,12 @@ Dotenv.config();
 class Auth {
 	@Inject('UserService')
 	private static userService: UserService;
+
+	@Inject('MenuService')
+	private static menuService: MenuService;
+
+	@Inject('DisheService')
+	private static disheService: DisheService;
 
 	public async isAuth(req: Request, res: Response, next: NextFunction) {
 		const authorizationHeader = req.headers['authorization'];
@@ -45,7 +55,7 @@ class Auth {
 				code = 403;
 				message = 'Accès refusé, veuillez-vous authentifier';
 			} else {
-				code = 401
+				code = 401;
 				message = 'Accès refusé, le token est invalide';
 			}
 
@@ -58,7 +68,21 @@ class Auth {
 			if (req.user && req.user.role === role) {
 				await Auth.nextParams(req, res, next);
 			} else {
-				let roleString: string;
+				let roleString: string, roleUser: string;
+
+				switch (req.user.role) {
+					case RoleEnum.CUSTOMER:
+						roleUser = 'client';
+						break;
+					case RoleEnum.RESTAURANT:
+						roleUser = 'restaurant';
+						break;
+					case RoleEnum.DELIVERYMAN:
+						roleUser = 'livreur';
+						break;
+					default:
+						break;
+				}
 
 				switch (role) {
 					case RoleEnum.CUSTOMER:
@@ -74,9 +98,9 @@ class Auth {
 						break;
 				}
 
-				return Auth.handler(res, roleString);
+				return Auth.handler(res, roleString, roleUser);
 			}
-		}
+		};
 	}
 
 	public isAll(req: Request, res: Response, next: NextFunction) {
@@ -100,41 +124,88 @@ class Auth {
 		}
 	}
 
-	private static handler = (res: Response, role?: string) => {
+	private static handler = (res: Response, role?: string, currentRole?: string) => {
 		return Handler.exception(
 			res,
 			role
-				? `Accès refusé, vérifiez si vous êtes authentifié avec le bon token et si vous êtes bien un ${role}`
+				? `Accès refusé, vous êtes un ${currentRole}. Vérifiez si vous êtes authentifié avec le bon token et si vous êtes bien un ${role}`
 				: 'Accès refusé',
 			403
 		);
-	}
+	};
 
 	private static async nextParams(req: Request, res: Response, next: NextFunction) {
+		const entity = req.path.split('/')[1] as 'customers' | 'deliverymans' | 'restaurants' | 'deliveries' | 'menus' | 'dishes';
+
 		if (req.params.id) {
-			if ((req.user && (req.user.id.toString() === req.params.id))) {
-				return next();
-			} else {
-				const userExists = await this.userService.select(true, 'COUNT(id) as count_id')
-					.where('id', '=', req.params.id)
-					.run();
+			switch (entity) {
+				case 'customers':
+				case 'deliverymans':
+				case 'restaurants':
+					// Vérifie si l'utilisateur existe
+					if ((req.user && (req.user.id.toString() === req.params.id))) {
+						return next();
+					} else {
+						const userExists = await this.userService.select(true, 'COUNT(id) as count_id')
+							.where('id', '=', req.params.id)
+							.run();
+						const userExist = userExists[0] as UserType & { count_id: number };
 
-				const userExist = userExists[0] as UserType & { count_id: number };
-				let message: string, code: number;
+						return Auth.nextParamsUsersError(res, userExist.count_id);
+					}
+				case 'deliveries':
+					// Vérifie si la livraison existe
+					break;
+				case 'menus':
+					// Vérifie si le menu existe et que le restaurant est bien le propriétaire
+					const menuExists = await this.menuService.select(true, 'COUNT(menus.id) as count_id')
+						.where('id', '=', req.params.id)
+						.andWhere('restaurant_id', '=', req.user.id)
+						.run();
+					const menuExist = menuExists[0] as MenuType & { count_id: number };
 
-				if (userExist.count_id > 0) {
-					message = 'Accès refusé, vous n\'avez pas l\'autorisation nécessaire';
-					code = 403;
-				} else {
-					message = 'L\'utilisateur n\'existe pas';
-					code = 404;
-				}
+					if (menuExist && menuExist.count_id > 0) {
+						next();
+					} else {
+						return Auth.nextParamsError(res, 'Ce menu n\'existe pas ou vous n\'avez pas l\'autorisation nécessaire');
+					}
+					break;
+				case 'dishes':
+					// Vérifie si le plat existe et que le restaurant est bien le propriétaire
+					const disheExists = await this.disheService.select(true, 'COUNT(dishes.id) as count_id')
+						.where('id', '=', req.params.id)
+						.andWhere('restaurant_id', '=', req.user.id)
+						.run();
+					const disheExist = disheExists[0] as DisheType & { count_id: number };
 
-				return Handler.exception(res, message, code);
+					if (disheExist && disheExist.count_id > 0) {
+						next();
+					} else {
+						return Auth.nextParamsError(res, 'Ce plat n\'existe pas ou vous n\'avez pas l\'autorisation nécessaire');
+					}
+					break;
 			}
 		} else {
 			return next();
 		}
+	}
+
+	public static nextParamsUsersError(res: Response, count_id: number) {
+		let message: string, code: number;
+
+		if (count_id > 0) {
+			message = 'Accès refusé, vous n\'avez pas l\'autorisation nécessaire';
+			code = 403;
+		} else {
+			message = 'L\'utilisateur n\'existe pas';
+			code = 404;
+		}
+
+		return Handler.exception(res, message, code);
+	}
+
+	public static nextParamsError(res: Response, message: string) {
+		return Handler.exception(res, message, 403);
 	}
 }
 

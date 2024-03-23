@@ -4,7 +4,7 @@ import Dotenv from 'dotenv';
 Dotenv.config();
 
 const MysqlConfig = {
-	connectionLimit: 200,
+	connectionLimit: 500,
 	host: process.env.MYSQL_HOST,
 	user: process.env.MYSQL_USER,
 	password: process.env.MYSQL_PASSWORD,

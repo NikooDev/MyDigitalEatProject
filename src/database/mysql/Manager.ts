@@ -27,7 +27,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 	 * this.service.create({...});
 	 * @param entity
 	 */
-	public async create(entity: Partial<T>): Promise<void | ResponseType<T>> {
+	public async create(entity: Partial<T>): Promise<void | number | ResponseType<T>> {
 		const columns = Object.keys(entity);
 		const values = Object.values(entity);
 
@@ -89,64 +89,66 @@ abstract class MysqlManager<T> extends Builder<T> {
 		}
 
 		const columns = fields.map(field => useFunction ? `${field}` : `${this.tableName}.${field}`).join(', ');
-
 		this.groupByColumns = [columns];
 		this.queryStart = `SELECT ${columns}`;
 		return {
+			limit: (limit: number) => this.limit(limit),
 			where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
 			orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),
-			run: () => this.run(),
+			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
+			run: () => this.run()
+		};
+	}
 
+	/**
+	 * @method selectJoin
+	 * @description Pour faire un select sur une table jointe =>
+	 * On passe la table jointe en premier paramètre, puis ses champs à sélectionner
+	 * this.userService
+	 * 		.select('id', autres colonnes de la table users)
+	 * 		.selectJoin('customers', 'user_id').run();
+	 * @param table
+	 * @param aggregate
+	 * @param fields
+	 */
+	private selectJoin(table: string, aggregate: boolean, ...fields: string[]) {
+		const joinedColumns = fields.flatMap(column => [`'${String(column)}'`, `${table}.${String(column)}`]).join(', ');
+
+		if (aggregate) {
+			this.queryStart += `, JSON_ARRAYAGG(JSON_OBJECT(${joinedColumns})) AS ${table.slice(0, -1)}`;
+		} else {
+			this.queryStart += `, JSON_OBJECT(${joinedColumns}) AS ${table.slice(0, -1)}`;
+		}
+
+		this.conditionsEnable.group = true;
+		this.queryJoin = true;
+
+		return {
 			/**
-			 * @method selectJoin
-			 * @description Pour faire un select sur une table jointe =>
-			 * On passe la table jointe en premier paramètre, puis ses champs à sélectionner
+			 * @method join
+			 * @description Permet de faire une jointure =>
 			 * this.userService
 			 * 		.select('id', autres colonnes de la table users)
-			 * 		.selectJoin('customers', 'user_id').run();
+			 * 		.selectJoin('customers', 'users.id', 'customers.user_id')
+			 * 		.join('LEFT JOIN', 'orders', 'users.id', 'orders.user_id').run();
+			 * @param join
 			 * @param table
-			 * @param aggregate
-			 * @param fields
+			 * @param columnA
+			 * @param columnB
 			 */
-			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => {
-				const joinedColumns = fields.flatMap(column => [`'${String(column)}'`, `${table}.${String(column)}`]).join(', ');
-
-				if (aggregate) {
-					this.queryStart += `, JSON_ARRAYAGG(JSON_OBJECT(${joinedColumns})) AS ${table.slice(0, -1)}`;
-				} else {
-					this.queryStart += `, JSON_OBJECT(${joinedColumns}) AS ${table.slice(0, -1)}`;
-				}
-
-				this.conditionsEnable.group = true;
-				this.queryJoin = true;
+			join: (join: 'LEFT JOIN' | 'INNER JOIN' | 'RIGHT JOIN', table: string, columnA: string, columnB: string) => {
+				this.queryEnd += `${join} ${table} ON ${columnA} = ${columnB} `;
 
 				return {
-					/**
-					 * @method join
-					 * @description Permet de faire une jointure =>
-					 * this.userService
-					 * 		.select('id', autres colonnes de la table users)
-					 * 		.selectJoin('customers', 'users.id', 'customers.user_id')
-					 * 		.join('LEFT JOIN', 'orders', 'users.id', 'orders.user_id').run();
-					 * @param join
-					 * @param table
-					 * @param columnA
-					 * @param columnB
-					 */
-					join: (join: 'LEFT JOIN' | 'INNER JOIN' | 'RIGHT JOIN', table: string, columnA: string, columnB: string) => {
-						this.queryEnd += `${join} ${table} ON ${columnA} = ${columnB} `;
-
-						return {
-							where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
-							andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
-							orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),
-							run: () => this.run()
-						};
-					}
+					selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
+					where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
+					andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
+					orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),
+					run: () => this.run()
 				};
 			}
-		};
+		}
 	}
 
 	/**

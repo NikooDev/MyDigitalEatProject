@@ -54,6 +54,44 @@ export const restaurantController = {
 	}
 }
 
+export const menuController = {
+	create: {
+		name: 'MenuController.create() =>',
+		error: 'Une erreur est survenue lors de la création du menu'
+	},
+	read: {
+		name: 'MenuController.read() =>',
+		error: 'Une erreur est survenue lors de la récupération des menus'
+	},
+	update: {
+		name: 'MenuController.update() =>',
+		error: 'Une erreur est survenue lors de la modification du menu'
+	},
+	delete: {
+		name: 'MenuController.delete() =>',
+		error: 'Une erreur est survenue lors de la suppression du menu'
+	}
+}
+
+export const disheController = {
+	create: {
+		name: 'DisheController.create() =>',
+		error: 'Une erreur est survenue lors de la création du plat'
+	},
+	read: {
+		name: 'DisheController.read() =>',
+		error: 'Une erreur est survenue lors de la récupération des plats'
+	},
+	update: {
+		name: 'DisheController.update() =>',
+		error: 'Une erreur est survenue lors de la modification du plat'
+	},
+	delete: {
+		name: 'DisheController.delete() =>',
+		error: 'Une erreur est survenue lors de la suppression du plat'
+	}
+}
+
 export const middleware = {
 	email: {
 		name: 'Email.isUniqueEmail() =>',

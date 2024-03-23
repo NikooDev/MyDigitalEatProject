@@ -1,5 +1,6 @@
 interface CardType {
-	description: string
+	id: number | null
+	description: string | null
 }
 
 export default CardType;

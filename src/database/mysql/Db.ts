@@ -8,6 +8,7 @@ import Handler from '@Core/response/handler';
  * sur une base de données MySQL à l'aide d'un pool de connexions
  */
 abstract class MysqlDb {
+	private static instance: MysqlDb;
 	private pool: Pool;
 
 	protected constructor() {

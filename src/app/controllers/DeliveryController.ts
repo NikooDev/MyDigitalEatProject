@@ -6,17 +6,18 @@ class DeliveryController implements Controller {
 
 	}
 
-	public delete(req: Request, res: Response) {
-
-	}
-
 	public read(req: Request, res: Response) {
-
+		// Les commandes de chaque utilisateur
 	}
 
 	public update(req: Request, res: Response) {
 
 	}
+
+	public delete(req: Request, res: Response) {
+
+	}
+
 }
 
 export default new DeliveryController();

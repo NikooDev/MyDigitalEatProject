@@ -24,7 +24,7 @@ class CustomerService extends DaoService<CustomerType> {
 				phone: entity.phone,
 				role: RoleEnum.CUSTOMER,
 				created_at: new Date(),
-				updated_at: new Date(),
+				updated_at: new Date()
 			},
 			address: entity.address,
 			user_id: null
@@ -56,7 +56,7 @@ class CustomerService extends DaoService<CustomerType> {
 				message: 'Votre compte client a bien été créé'
 			};
 		} else {
-			Handler.logger('Échec de la récupération du dernier identifiant', 'error');
+			Handler.logger('Échec de la récupération du dernier identifiant de l\'utilisateur', 'error');
 
 			return {
 				code: 500,

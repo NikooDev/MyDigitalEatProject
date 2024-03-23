@@ -24,7 +24,7 @@ class CustomerController implements Controller {
 	}
 
 	public async read(req: Request, res: Response) {
-
+		// Le customer + ses commandes + les livreurs + les restaurants + les plats associés à la commande
 	}
 
 	public async update(req: Request, res: Response) {
