@@ -109,9 +109,9 @@ class MenuService extends DaoService<MenuType> {
 
 	public async read(): Promise<ResponseType<MenuType[]>> {
 		const allMenus = await this.select(false, 'id', 'card_id', 'restaurant_id', 'name', 'price', 'description')
-			.selectJoin('menus_dishes', true, 'menu_id', 'dishe_id')
+			.selectJoin('menus_dishes', true, false, 'menu_id', 'dishe_id')
 			.join('INNER JOIN', 'menus_dishes', 'menus.id', 'menus_dishes.menu_id')
-			.selectJoin('dishes', true, 'id', 'name', 'price')
+			.selectJoin('dishes', true, false, 'id', 'name', 'price')
 			.join('INNER JOIN', 'dishes', 'menus_dishes.dishe_id', 'dishes.id')
 			.run();
 

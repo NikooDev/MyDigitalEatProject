@@ -1,3 +1,6 @@
+import MenuType from '@Src/interfaces/Menu';
+import DisheType from '@Src/interfaces/Dishe';
+
 export enum DeliveryEnum {
 	PENDING = 'PENDING',
 	DELIVERED = 'DELIVERED',
@@ -11,6 +14,12 @@ interface DeliveryType {
 	restaurant_id: number
 	status: DeliveryEnum
 	created_at: Date
+	menu?: MenuType[]
+	dishe?: DisheType[]
+	orders_deliverie?: {
+		menu_id?: number
+		dishe_id?: number
+	}
 }
 
 export default DeliveryType;

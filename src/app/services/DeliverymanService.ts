@@ -67,9 +67,66 @@ class DeliverymanService extends DaoService<DeliverymanType> {
 		}
 	}
 
+	public async read(user: UserType): Promise<ResponseType<DeliverymanType & any>> {
+		if (!user) {
+			return {
+				data: null,
+				code: 404,
+				message: 'Accès interdit, veuillez vous identifier'
+			}
+		}
+
+		const deliverymans = await this.select(false, 'user_id', 'address', 'status')
+			.selectJoin('users', false, false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
+			.join('INNER JOIN', 'users', 'users.id', 'deliverymans.user_id')
+			.where('deliverymans.user_id', '=', user.id)
+			.run();
+
+		const deliveries = await this.select(false, 'user_id', 'address', 'status')
+			.groupBy('deliveries.id', 'restaurants.id', 'deliverymans.id', 'customers.address')
+			.selectJoin('deliveries', false, false, 'id', 'customer_id', 'deliveryman_id', 'restaurant_id', 'status', 'created_at')
+			.join('LEFT JOIN', 'deliveries', 'deliveries.deliveryman_id', user.id.toString())
+			.selectJoin('customers', false, false, 'user_id', 'address')
+			.join('INNER JOIN', 'customers', 'customers.user_id', 'deliveries.customer_id')
+			.selectJoin('restaurants', false, false, 'user_id', 'card_id', 'description', 'address')
+			.join('LEFT JOIN', 'restaurants', 'restaurants.user_id', 'deliveries.restaurant_id')
+			.selectJoin('menus', true, true, 'id', 'card_id', 'restaurant_id', 'name', 'price', 'description')
+			.join('LEFT JOIN', 'menus', 'menus.restaurant_id', 'deliveries.restaurant_id')
+			.selectJoin('dishes', true, true, 'id', 'card_id', 'restaurant_id', 'name', 'price')
+			.join('LEFT JOIN', 'dishes', 'dishes.restaurant_id', 'deliveries.restaurant_id')
+			.where('deliverymans.user_id', '=', user.id)
+			.run();
+
+		if (deliverymans.length === 0) {
+			return {
+				data: null,
+				code: 403,
+				message: 'Vous n\'êtes pas autorisé à accéder à cette ressource'
+			}
+		}
+
+		deliveries.forEach(delivery => {
+			delivery.menu = JSON.parse(delivery.menu as unknown as string);
+			delivery.dishe = JSON.parse(delivery.dishe as unknown as string);
+
+			return delivery;
+		});
+
+		const deliveryman = {
+			...deliverymans[0],
+			deliveries: deliveries
+		}
+
+		return {
+			code: 200,
+			data: deliveryman,
+			message: ''
+		}
+	}
+
 	public async update(entity: Partial<DeliverymanType & UserType>, id: string | number): Promise<ResponseType<DeliverymanType>> {
 		const deliverymanExists = await this.select(false, 'id', 'user_id', 'status', 'address')
-			.selectJoin('users', false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
+			.selectJoin('users', false, false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
 			.join('INNER JOIN', 'users', 'users.id', 'deliverymans.user_id')
 			.where('deliverymans.user_id', '=', id)
 			.run()

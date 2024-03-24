@@ -11,7 +11,9 @@ import {
 import {
 	MiddlewaresCustomer, MiddlewaresDeliveries, MiddlewaresDeliveryman,
 	MiddlewaresDishe, MiddlewaresMenu, MiddlewaresRestaurant
-} from '@Middlewares/handler';
+} from '@Middlewares/Handler';
+import Schema from '@App/graphql/schemas';
+import DataLoader from 'dataloader';
 
 class ReadyServer {
 	/**
@@ -73,9 +75,9 @@ class ReadyServer {
 		// Routes GRAPHQL
 		this.app.use('/api/flex', (req, res) => {
 			graphqlHTTP({
-				schema: null,
+				schema: Schema,
 				graphiql: true,
-				context: { user: req.user }
+				context: { req, dataloaders: DataLoader }
 			})(req, res);
 		});
 	}

@@ -23,9 +23,12 @@ class RestaurantController implements Controller {
 		});
 	}
 
-	public async read(req: Request, res: Response) {
-		// Tous les restaurants avec leurs cartes, menus et plats
+	public async read(_: Request, res: Response) {
+		await Handler.tryCatch(res, restaurantController.read, async () => {
+			const restaurant = await this.restaurantService.read();
 
+			return (Handler[restaurant.code === 200 ? 'success' : 'exception'])(res, restaurant.message, restaurant.code, { restaurant: restaurant.data });
+		});
 	}
 
 	public async update(req: Request, res: Response) {

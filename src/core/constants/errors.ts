@@ -14,6 +14,10 @@ export const customerController = {
 		name: 'CustomerController.create() =>',
 		error: userErrorCreate
 	},
+	read: {
+		name: 'CustomerController.read() =>',
+		error: 'Une erreur est survenue lors de la récupération du client'
+	},
 	update: {
 		name: 'CustomerController.update() =>',
 		error: userErrorUpdate
@@ -29,6 +33,10 @@ export const deliverymanController = {
 		name: 'DeliverymanController.create() =>',
 		error: userErrorCreate
 	},
+	read: {
+		name: 'DeliverymanController.read() =>',
+		error: 'Une erreur est survenue lors de la récupération du livreur'
+	},
 	update: {
 		name: 'DeliverymanController.update() =>',
 		error: userErrorUpdate
@@ -43,6 +51,10 @@ export const restaurantController = {
 	create: {
 		name: 'RestaurantController.create() =>',
 		error: userErrorCreate
+	},
+	read: {
+		name: 'RestaurantController.read() =>',
+		error: 'Une erreur est survenue lors de la récupération des restaurants'
 	},
 	update: {
 		name: 'RestaurantController.update() =>',

@@ -1,3 +1,7 @@
+import MenuType from '@Src/interfaces/Menu';
+import DisheType from '@Src/interfaces/Dishe';
+import DeliveryType from '@Src/interfaces/Delivery';
+
 export enum RoleEnum {
 	CUSTOMER = 'CUSTOMER',
 	DELIVERYMAN = 'DELIVERYMAN',
@@ -26,6 +30,8 @@ export interface CustomerType {
 	user_id: number
 	address: string
 	user: UserType
+	menu?: MenuType[]
+	dishe?: DisheType[]
 }
 
 export interface DeliverymanType {
@@ -34,6 +40,9 @@ export interface DeliverymanType {
 	status: StatusEnum
 	address: string
 	user: UserType
+	deliverie?: DeliveryType[]
+	menu?: MenuType[]
+	dishe?: DisheType[]
 }
 
 export interface RestaurantType {
@@ -43,4 +52,6 @@ export interface RestaurantType {
 	description: string
 	address: string
 	user: UserType
+	menu?: MenuType[]
+	dishe?: DisheType[]
 }

@@ -24,8 +24,13 @@ class CustomerController implements Controller {
 	}
 
 	public async read(req: Request, res: Response) {
-		// Le customer + ses commandes + les livreurs + les restaurants + les plats associés à la commande
+		const user = req.user;
 
+		await Handler.tryCatch(res, customerController.read, async () => {
+			const customers = await this.customerService.read(user);
+
+			return (Handler[customers.code === 200 ? 'success' : 'exception'])(res, customers.message, customers.code, { customers: customers.data });
+		});
 	}
 
 	public async update(req: Request, res: Response) {

@@ -12,17 +12,22 @@ class DeliveryController implements Controller {
 	public async create(req: Request, res: Response) {
 		const data = req.body;
 		const user = req.user;
-
+		const delivery = await this.deliveryService.create(data, user);
 		await Handler.tryCatch(res, deliveryController.create, async () => {
-			const delivery = await this.deliveryService.create(data, user);
+
 
 			return (Handler[delivery.code === 200 ? 'success' : 'exception'])(res, delivery.message, delivery.code, { delivery: delivery.data });
 		});
 	}
 
-	public read(req: Request, res: Response) {
-		// Les commandes de chaque utilisateur
+	public async read(req: Request, res: Response) {
+		const user = req.user;
 
+		await Handler.tryCatch(res, deliveryController.read, async () => {
+			const delivery = await this.deliveryService.read(user);
+
+			return (Handler[delivery.code === 200 ? 'success' : 'exception'])(res, delivery.message, delivery.code, { delivery: delivery.data });
+		});
 	}
 
 	public update(_req: Request, _res: Response) {}

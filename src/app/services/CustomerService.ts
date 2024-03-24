@@ -66,9 +66,59 @@ class CustomerService extends DaoService<CustomerType> {
 		}
 	}
 
+	public async read(user: UserType): Promise<ResponseType<CustomerType & any>> {
+		if (!user) {
+			return {
+				data: null,
+				code: 404,
+				message: 'Accès interdit, veuillez vous identifier'
+			}
+		}
+
+		const customers = await this.select(false, 'user_id')
+			.selectJoin('users', false, false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
+			.join('INNER JOIN', 'users', 'users.id', 'customers.user_id')
+			.where('customers.user_id', '=', user.id)
+			.run();
+
+		const deliveries = await this.select(false, 'user_id', 'address')
+			.groupBy('deliveries.id', 'restaurants.id', 'deliverymans.id')
+			.selectJoin('deliveries', false, false, 'id', 'customer_id', 'deliveryman_id', 'restaurant_id', 'status', 'created_at')
+			.join('LEFT JOIN', 'deliveries', 'deliveries.customer_id', user.id.toString())
+			.selectJoin('restaurants', false, false, 'user_id', 'card_id', 'description', 'address')
+			.join('LEFT JOIN', 'restaurants', 'restaurants.user_id', 'deliveries.restaurant_id')
+			.selectJoin('deliverymans', false, false, 'user_id', 'status', 'address')
+			.join('LEFT JOIN', 'deliverymans', 'deliverymans.user_id', 'deliveries.deliveryman_id')
+			.selectJoin('menus', true, true, 'id', 'card_id', 'restaurant_id', 'name', 'price', 'description')
+			.join('LEFT JOIN', 'menus', 'menus.restaurant_id', 'deliveries.restaurant_id')
+			.selectJoin('dishes', true, true, 'id', 'card_id', 'restaurant_id', 'name', 'price')
+			.join('LEFT JOIN', 'dishes', 'dishes.restaurant_id', 'deliveries.restaurant_id')
+			.where('customers.user_id', '=', user.id)
+			.run();
+
+		deliveries.forEach(delivery => {
+			delivery.menu = JSON.parse(delivery.menu as unknown as string);
+			delivery.dishe = JSON.parse(delivery.dishe as unknown as string);
+
+			return delivery;
+		});
+
+		const customer = {
+			...customers[0],
+			address: deliveries[0].address,
+			deliveries: deliveries
+		}
+
+		return {
+			code: 200,
+			data: customer,
+			message: ''
+		}
+	}
+
 	public async update(entity: Partial<CustomerType & UserType>, id: string): Promise<ResponseType<CustomerType>> {
 		const customersExist = await this.select(false, 'id', 'user_id')
-			.selectJoin('users', false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
+			.selectJoin('users', false, false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
 			.join('INNER JOIN', 'users', 'users.id', 'customers.user_id')
 			.where('customers.user_id', '=', id)
 			.run()

@@ -21,7 +21,7 @@ const isCustomerOrRestaurant = Auth.isCustomerOrRestaurant.bind(Auth);
 const isValidDatas = Validator.datas.bind(Validator);
 
 export const MiddlewaresCustomer = {
-	get: [isAuth, isAll],
+	get: [isAuth, isCustomer],
 	post: [isValidDatas, isUniqueEmail],
 	put: [isAuth, isCustomer, isValidDatas, isUniqueEmail],
 	delete: [isAuth, isCustomer]
@@ -35,7 +35,7 @@ export const MiddlewaresRestaurant = {
 } as Middleware;
 
 export const MiddlewaresDeliveryman = {
-	get: [isAuth, isAll],
+	get: [isAuth, isDeliveryman],
 	post: [isValidDatas, isUniqueEmail],
 	put: [isAuth, isDeliveryman, isValidDatas, isUniqueEmail],
 	delete: [isAuth, isDeliveryman]

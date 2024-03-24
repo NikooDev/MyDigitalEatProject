@@ -73,10 +73,40 @@ class RestaurantService extends DaoService<RestaurantType> {
 		}
 	}
 
+	public async read(): Promise<ResponseType<RestaurantType>> {
+		const restaurants = await this.select(false, 'user_id', 'card_id', 'address', 'description')
+			.selectJoin('menus', false, true, 'id', 'card_id', 'restaurant_id', 'name', 'price', 'description')
+			.join('INNER JOIN', 'menus', 'menus.restaurant_id', 'restaurants.user_id')
+			.selectJoin('dishes', false, true, 'id', 'card_id', 'restaurant_id', 'name', 'price')
+			.join('INNER JOIN', 'dishes', 'dishes.restaurant_id', 'restaurants.user_id')
+			.run();
+
+		restaurants.forEach(restaurant => {
+			restaurant.menu = JSON.parse(restaurant.menu as any);
+			restaurant.dishe = JSON.parse(restaurant.dishe as any);
+
+			return restaurant;
+		});
+
+		if (restaurants.length === 0) {
+			return {
+				code: 404,
+				data: null,
+				message: 'Aucun restaurant trouvé'
+			}
+		}
+
+		return {
+			code: 200,
+			data: restaurants,
+			message: `Liste des restaurants - ${restaurants.length} restaurants trouvés`
+		}
+	}
+
 	public async update(entity: Partial<RestaurantType & UserType & { card: CardType }>, id: string): Promise<ResponseType<RestaurantType & { card: CardType }>> {
 		// Est-ce que le restaurant existe ?
 		const restaurantExists = await this.select(false, 'id', 'user_id', 'card_id', 'address', 'description')
-			.selectJoin('users', false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
+			.selectJoin('users', false, false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
 			.join('INNER JOIN', 'users', 'users.id', 'restaurants.user_id')
 			.where('restaurants.user_id', '=', id)
 			.run()
@@ -112,7 +142,7 @@ class RestaurantService extends DaoService<RestaurantType> {
 			// Si on modifie ou ajoute une carte, on vérifie si elle existe déjà
 			if (entity.card && entity.card.description.length > 0) {
 				const restaurantCardExists = await this.select(false, 'card_id')
-					.selectJoin('cards', false, 'id')
+					.selectJoin('cards', false, false, 'id')
 					.join('INNER JOIN', 'cards', 'cards.id', 'restaurants.card_id')
 					.where('restaurants.user_id', '=', restaurantExist.user_id)
 					.run();
@@ -132,7 +162,7 @@ class RestaurantService extends DaoService<RestaurantType> {
 
 			// On récupère la carte du restaurant
 			const restaurantCardExists = await this.select(false, 'card_id')
-				.selectJoin('cards', false, 'id', 'description')
+				.selectJoin('cards', false, false, 'id', 'description')
 				.join('INNER JOIN', 'cards', 'cards.id', 'restaurants.card_id')
 				.where('restaurants.user_id', '=', restaurantExist.user_id)
 				.run();

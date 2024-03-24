@@ -43,7 +43,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 	/**
 	 * @method update
 	 * @description Appel de la méthode update =>
-	 * this.service.update({...});
+	 * this.service.update({...}, id);
 	 * @param entity
 	 * @param id
 	 */
@@ -97,7 +97,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 			where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
 			orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),
-			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
+			selectJoin: (table: string, aggregate: boolean, concat: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, concat, ...fields),
 			run: () => this.run()
 		};
 	}
@@ -108,7 +108,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 		this.groupByColumns.push(columns);
 
 		return {
-			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
+			selectJoin: (table: string, aggregate: boolean, concat: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, concat, ...fields),
 		}
 	}
 
@@ -118,15 +118,18 @@ abstract class MysqlManager<T> extends Builder<T> {
 	 * On passe la table jointe en premier paramètre, puis ses champs à sélectionner
 	 * this.userService
 	 * 		.select('id', autres colonnes de la table users)
-	 * 		.selectJoin('customers', 'user_id').run();
+	 * 		.selectJoin('customers', true, false, 'user_id').run();
 	 * @param table
+	 * @param concat
 	 * @param aggregate
 	 * @param fields
 	 */
-	private selectJoin(table: string, aggregate: boolean, ...fields: string[]) {
+	private selectJoin(table: string, aggregate: boolean, concat: boolean, ...fields: string[]) {
 		const joinedColumns = fields.flatMap(column => [`'${String(column)}'`, `${table}.${String(column)}`]).join(', ');
 
-		if (aggregate) {
+		if (concat) {
+			this.queryStart += `, CONCAT('[', GROUP_CONCAT( DISTINCT JSON_OBJECT(${joinedColumns})),']') AS ${table.slice(0, -1)}`;
+		} else if (aggregate) {
 			this.queryStart += `, JSON_ARRAYAGG(JSON_OBJECT(${joinedColumns})) AS ${table.slice(0, -1)}`;
 		} else {
 			this.queryStart += `, JSON_OBJECT(${joinedColumns}) AS ${table.slice(0, -1)}`;
@@ -140,7 +143,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 			 * @method join
 			 * @description Permet de faire une jointure =>
 			 * this.userService
-			 * 		.select('id', autres colonnes de la table users)
+			 * 		.select('id', true, false, autres colonnes de la table users)
 			 * 		.selectJoin('customers', 'users.id', 'customers.user_id')
 			 * 		.join('LEFT JOIN', 'orders', 'users.id', 'orders.user_id').run();
 			 * @param join
@@ -152,7 +155,7 @@ abstract class MysqlManager<T> extends Builder<T> {
 				this.queryEnd += `${join} ${table} ON ${columnA} = ${columnB} `;
 
 				return {
-					selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
+					selectJoin: (table: string, aggregate: boolean, concat: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, concat, ...fields),
 					where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
 					andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
 					orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),

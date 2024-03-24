@@ -149,11 +149,6 @@ const Schemas: Schemas = {
 			'object.missing': 'Au moins un menu ou un plat est requis'
 		})
 	},
-	'/deliveries/{id}': {
-		'PUT': Joi.object({
-
-		})
-	},
 	'/menus': {
 		'POST': Joi.object({
 			name: Joi.string().required().max(30).messages({

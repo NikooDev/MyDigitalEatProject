@@ -24,8 +24,13 @@ class DeliverymanController implements Controller {
 	}
 
 	public async read(req: Request, res: Response) {
-		// Le deliveryman + ses commandes + les customers + les restaurants + les plats associés à la commande
+		const user = req.user;
 
+		await Handler.tryCatch(res, deliverymanController.read, async () => {
+			const deliveryman = await this.deliverymanService.read(user);
+
+			return (Handler[deliveryman.code === 200 ? 'success' : 'exception'])(res, deliveryman.message, deliveryman.code, { deliveryman: deliveryman.data });
+		});
 	}
 
 	public async update(req: Request, res: Response) {
