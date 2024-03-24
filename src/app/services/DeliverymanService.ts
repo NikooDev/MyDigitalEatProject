@@ -67,8 +67,8 @@ class DeliverymanService extends DaoService<DeliverymanType> {
 		}
 	}
 
-	public async update(entity: Partial<DeliverymanType & UserType>, id: string): Promise<ResponseType<DeliverymanType>> {
-		const deliverymanExists = await this.select(false, 'id', 'user_id')
+	public async update(entity: Partial<DeliverymanType & UserType>, id: string | number): Promise<ResponseType<DeliverymanType>> {
+		const deliverymanExists = await this.select(false, 'id', 'user_id', 'status', 'address')
 			.selectJoin('users', false, 'id', 'email', 'password', 'name', 'phone', 'role', 'created_at', 'updated_at')
 			.join('INNER JOIN', 'users', 'users.id', 'deliverymans.user_id')
 			.where('deliverymans.user_id', '=', id)
@@ -101,7 +101,7 @@ class DeliverymanService extends DaoService<DeliverymanType> {
 
 			const { user, ...deliveryman } = updateDeliveryman;
 
-			await super.update(deliveryman, deliverymanExist.user_id);
+			await super.update(deliveryman, deliverymanExist.id);
 
 			delete updateDeliveryman.user.password;
 

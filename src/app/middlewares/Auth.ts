@@ -9,6 +9,8 @@ import DisheService from '@Services/DisheService';
 import Handler from '@Core/response/handler';
 import Inject from '@Core/service/Inject';
 import Dotenv from 'dotenv';
+import DeliveryService from '@Services/DeliveryService';
+import DeliveryType from '@Src/interfaces/Delivery';
 
 Dotenv.config();
 
@@ -20,6 +22,9 @@ Dotenv.config();
 class Auth {
 	@Inject('UserService')
 	private static userService: UserService;
+
+	@Inject('DeliveryService')
+	private static deliveryService: DeliveryService;
 
 	@Inject('MenuService')
 	private static menuService: MenuService;
@@ -137,6 +142,8 @@ class Auth {
 	private static async nextParams(req: Request, res: Response, next: NextFunction) {
 		const entity = req.path.split('/')[1] as 'customers' | 'deliverymans' | 'restaurants' | 'deliveries' | 'menus' | 'dishes';
 
+		// Pour chaque route, je vérifie l'authenticité de l'utilisateur
+
 		if (req.params.id) {
 			switch (entity) {
 				case 'customers':
@@ -155,6 +162,18 @@ class Auth {
 					}
 				case 'deliveries':
 					// Vérifie si la livraison existe
+					const deliveryExists = await this.deliveryService.select(true, 'COUNT(deliveries.id) as count_id')
+						.where('id', '=', req.params.id)
+						.andWhere('restaurant_id', '=', req.user.id)
+						.orWhere('customer_id', '=', req.user.id)
+						.run();
+					const deliveryExist = deliveryExists[0] as DeliveryType & { count_id: number };
+
+					if (deliveryExist && deliveryExist.count_id > 0) {
+						next();
+					} else {
+						return Auth.nextParamsError(res, 'Cette commande n\'existe pas ou vous n\'avez pas l\'autorisation nécessaire');
+					}
 					break;
 				case 'menus':
 					// Vérifie si le menu existe et que le restaurant est bien le propriétaire

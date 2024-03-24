@@ -92,6 +92,25 @@ export const disheController = {
 	}
 }
 
+export const deliveryController = {
+	create: {
+		name: 'DeliveryController.create() =>',
+		error: 'Une erreur est survenue lors de la création de la commande'
+	},
+	read: {
+		name: 'DeliveryController.read() =>',
+		error: 'Une erreur est survenue lors de la récupération des commandes'
+	},
+	update: {
+		name: 'DeliveryController.update() =>',
+		error: 'Une erreur est survenue lors de la modification de la commande'
+	},
+	delete: {
+		name: 'DeliveryController.delete() =>',
+		error: 'Une erreur est survenue lors de la suppression de la commande'
+	}
+}
+
 export const middleware = {
 	email: {
 		name: 'Email.isUniqueEmail() =>',

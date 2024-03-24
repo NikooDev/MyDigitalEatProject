@@ -25,6 +25,7 @@ class DeliverymanController implements Controller {
 
 	public async read(req: Request, res: Response) {
 		// Le deliveryman + ses commandes + les customers + les restaurants + les plats associés à la commande
+
 	}
 
 	public async update(req: Request, res: Response) {

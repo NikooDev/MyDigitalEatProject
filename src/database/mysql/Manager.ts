@@ -93,12 +93,23 @@ abstract class MysqlManager<T> extends Builder<T> {
 		this.queryStart = `SELECT ${columns}`;
 		return {
 			limit: (limit: number) => this.limit(limit),
+			groupBy: (...fields: string[]) => this.groupBy(...fields),
 			where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
 			orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),
 			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
 			run: () => this.run()
 		};
+	}
+
+	private groupBy(...fields: string[]) {
+		const columns = fields.map(field => `${field}`).join(', ');
+
+		this.groupByColumns.push(columns);
+
+		return {
+			selectJoin: (table: string, aggregate: boolean, ...fields: string[]) => this.selectJoin(table, aggregate, ...fields),
+		}
 	}
 
 	/**
@@ -159,6 +170,8 @@ abstract class MysqlManager<T> extends Builder<T> {
 		this.queryStart = `SELECT *`;
 
 		return {
+			limit: (limit: number) => this.limit(limit),
+			orderBy: (column: string, order: 'ASC' | 'DESC') => this.orderBy(column, order),
 			where: (column: string, operator: WhereOperatorType, value: any) => this.where(column, operator, value),
 			andWhere: (column: string, operator: WhereOperatorType, value: any) => this.andWhere(column, operator, value),
 			orWhere: (column: string, operator: WhereOperatorType, value: any) => this.orWhere(column, operator, value),

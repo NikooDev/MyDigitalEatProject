@@ -20,7 +20,7 @@ class DisheController implements Controller {
 		});
 	}
 
-	public async read(req: Request, res: Response) {
+	public async read(_: Request, res: Response) {
 		await Handler.tryCatch(res, disheController.read, async () => {
 			const dishes = await this.disheService.read();
 

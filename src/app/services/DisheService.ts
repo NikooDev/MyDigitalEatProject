@@ -111,6 +111,14 @@ class DisheService extends DaoService<DisheType> {
 	public async read(): Promise<ResponseType<DisheType[]>> {
 		const dishes = await this.all().run();
 
+		if (!dishes) {
+			return {
+				code: 404,
+				data: null,
+				message: 'Aucun plat trouvé'
+			}
+		}
+
 		return {
 			code: 200,
 			data: dishes,

@@ -25,6 +25,7 @@ class RestaurantController implements Controller {
 
 	public async read(req: Request, res: Response) {
 		// Tous les restaurants avec leurs cartes, menus et plats
+
 	}
 
 	public async update(req: Request, res: Response) {

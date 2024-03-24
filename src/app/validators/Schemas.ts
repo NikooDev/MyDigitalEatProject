@@ -3,7 +3,7 @@ import Joi, { ObjectSchema } from 'joi';
 
 interface Schemas {
 	[route: string]: {
-		[method: string]: ObjectSchema<any>;
+		[method: string]: ObjectSchema;
 	};
 }
 
@@ -118,7 +118,35 @@ const Schemas: Schemas = {
 	},
 	'/deliveries': {
 		'POST': Joi.object({
-
+			restaurant_id: Joi.number().strict().required().messages({
+				'number.base': 'Le restaurant doit être un nombre',
+				'string.empty': 'Un restaurant est requis',
+				'any.required': 'Un restaurant est requis'
+			}),
+			menus: Joi.array().unique().items(Joi.number().strict().min(1).required().messages({
+				'number.empty': 'Au moins un menu est requis',
+				'any.required': 'Au moins un menu est requis'
+			})).messages({
+				'any.required': 'Les menus sont requis',
+				'array.base': 'Les menus doivent être une liste',
+				'array.unique': 'Les menus doivent être une liste unique',
+				'array.includesRequiredUnknowns': 'Les menus doivent être une liste de nombre (id)',
+				'number.base': 'Chaque élément de la liste des menus doit être un nombre (id)',
+				'number.min': 'Chaque élément de la liste des menus doit contenir au moins un caractère'
+			}),
+			dishes: Joi.array().unique().items(Joi.number().strict().required().messages({
+				'number.empty': 'Au moins un plat est requis',
+				'any.required': 'Au moins un plat est requis'
+			})).min(1).messages({
+				'any.required': 'Les plats sont requis',
+				'array.base': 'Les plats doivent être une liste',
+				'array.unique': 'Les plats doivent être une liste unique',
+				'array.includesRequiredUnknowns': 'Les plats doivent être une liste de nombre (id)',
+				'number.base': 'Chaque élément de la liste des plats doit être un nombre (id)',
+				'number.min': 'Chaque élément de la liste des plats doit contenir au moins un caractère'
+			})
+		}).or('menus', 'dishes').messages({
+			'object.missing': 'Au moins un menu ou un plat est requis'
 		})
 	},
 	'/deliveries/{id}': {
