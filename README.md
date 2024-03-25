@@ -50,22 +50,27 @@ Configurez le fichier .env pour adapter votre configuration à la base de donné
 
 ### Gestionnaire de requêtes
 
-Pour rendre les accès aux données modulables, j'ai créé un générateur de requête accessible dans dabatase/mysql : 
+Pour rendre les accès aux données modulables, j'ai créé un générateur de requête accessible dans dabatase/mysql/Mananer.ts : 
 
 Select :
 ```javascript
 const data = await this.service.select('id', 'name', 'email')
     .where('users.id', '=', user.id)
     .limit(1)
+    .orderBy('created_at', 'DESC')
     .run();
 ```
 
 Jointure :
 ```javascript
 const data = await this.service.select('id', 'name', 'email')
-    .selectJoin('tableSelect', 'id', 'role', 'status')
-    .join('LEFT JOIN', 'tableSelect', 'id', '=', 'tableSelect.id')
+    .selectJoin('tableSelect1', 'id', 'role', 'status')
+    .join('LEFT JOIN', 'tableSelect1', 'id', '=', 'tableSelect.id')
+    .selectJoin('tableSelect2', 'id', 'role', 'status')
+    .join('LEFT JOIN', 'tableSelect2', 'id', '=', 'tableSelect.id')
     .where('users.id', '=', user.id)
+    .andWhere('tableSelect1.status', '=', tableSelect2.status)
+    .orWhere('tableSelect2.id', '=', user.id)
     .groupBy('id')
     .run();
 ```
