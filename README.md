@@ -52,7 +52,7 @@ Configurez le fichier .env pour adapter votre configuration à la base de donné
 
 Pour rendre les accès aux données modulables, j'ai créé un générateur de requête accessible dans dabatase/mysql/Mananer.ts : 
 
-Select :
+Exemple de select :
 ```javascript
 const data = await this.service.select('id', 'name', 'email')
     .where('users.id', '=', user.id)
@@ -61,7 +61,7 @@ const data = await this.service.select('id', 'name', 'email')
     .run();
 ```
 
-Jointure :
+Exemple de jointure :
 ```javascript
 const data = await this.service.select('id', 'name', 'email')
     .selectJoin('tableSelect1', 'id', 'role', 'status')
