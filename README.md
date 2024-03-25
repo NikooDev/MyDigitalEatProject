@@ -54,7 +54,7 @@ Pour rendre les accès aux données modulables, j'ai créé un générateur de r
 
 Exemple de select :
 ```javascript
-const data = await this.service.select('id', 'name', 'email')
+const data = await this.userService.select('id', 'name', 'email')
     .where('users.id', '=', user.id)
     .limit(1)
     .orderBy('created_at', 'DESC')
@@ -63,7 +63,7 @@ const data = await this.service.select('id', 'name', 'email')
 
 Exemple de jointure :
 ```javascript
-const data = await this.service.select('id', 'name', 'email')
+const data = await this.userService.select('id', 'name', 'email')
     .selectJoin('tableSelect1', 'id', 'role', 'status')
     .join('LEFT JOIN', 'tableSelect1', 'id', '=', 'tableSelect.id')
     .selectJoin('tableSelect2', 'id', 'role', 'status')
