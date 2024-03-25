@@ -108,7 +108,7 @@ class Container {
 Container.register('UserService', new UserService());
 ```
 
-```
+```javascript
 @Inject('UserService')
 private userService: UserService
 ```
