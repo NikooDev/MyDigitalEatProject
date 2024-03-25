@@ -104,6 +104,8 @@ class Container {
 		return Container.services.get(name);
 	}
 }
+
+Container.register('UserService', new UserService());
 ```
 
 ```
