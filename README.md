@@ -78,13 +78,7 @@ const data = await this.userService.select('id', 'name', 'email')
 ### Injection de dépendances
 
 Les services DAO sont des classes d'accès aux données via le générateur de requêtes SQL.
-
-Ils doivent être injectés grâce à un décorateur :
-
-```
-@Inject('UserService')
-private userService: UserService
-```
+J'ai créé un injecteur de dépendance simplifié pour répondre au problème d'injection de service dans les classes :
 
 ```javascript
 const Inject = (serviceName: string): InjectType['decorator'] => {
@@ -110,6 +104,11 @@ class Container {
 		return Container.services.get(name);
 	}
 }
+```
+
+```
+@Inject('UserService')
+private userService: UserService
 ```
 
 Le container se charge d'inscrire chaque service en tant que dépendance et le décorateur permet d'injecter ces dépendances dans les classes TypeScript
