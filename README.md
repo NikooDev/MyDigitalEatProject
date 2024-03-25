@@ -43,7 +43,7 @@ Configurez le fichier .env pour adapter votre configuration à la base de donné
         * validators/ : Le schéma de validation des données
     * config/ : Fichiers de configuration
     * core/ : Fichiers nécessaire au fonctionnement interne de l'API
-    * database/ : Gestionnaire de requête, accès à la base de données
+    * database/ : Gestionnaire de requête, connexion à la base de données
     * interfaces/ : Interfaces et types du projet
     * start/ : Fichier de démarrage pour lancer le serveur
 * server.ts
