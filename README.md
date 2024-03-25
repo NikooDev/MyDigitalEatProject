@@ -1,3 +1,8 @@
+
+# API MyDigitalEatProject
+API pour la gestion de livraisons et de commandes
+
+
 ## Structure du projet
 API créée avec ExpressJS, MySQL, sans ORM
 
